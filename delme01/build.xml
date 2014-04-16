@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<project name="Ant-Test" default="main" basedir=".">
+	<!-- Sets variables which can later be used. -->
+	<!-- The value of a property is accessed via ${} -->
+	<property name="src.dir" location="src" />
+	<property name="build.dir" location="bin" />
+	<property name="dist.dir" location="dist" />
+	<property name="docs.dir" location="docs" />
+	<property name="lib.dir" location="lib" />
+
+	<!-- Variables used for JUnit testing - need to update -->
+	<property name="test.dir" location="src" />
+	<property name="test.report.dir" location="testreport" />
+
+	<!-- Deletes the existing build, docs and dist directory -->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${docs.dir}" />
+		<delete dir="${dist.dir}" />
+		<delete dir="${test.report.dir}" />
+
+	</target>
+
+	<path id="build.classpath">
+		<!-- actually junit-4.11junit.jar would be included since in lib 
+		<pathelement location="lib/junit-4.11junit.jar" />
+		 lib -->
+		<pathelement location="${build.dir}" />
+
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+
+	<!-- Creates the build, docs and dist directory -->
+	<target name="makedir">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${docs.dir}" />
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${test.report.dir}" />
+	</target>
+
+
+	<!-- Compiles the java code (including the usage of library for JUnit -->
+	<target name="compile" depends="clean, makedir">
+		<javac srcdir="${src.dir}" destdir="${build.dir}" 
+		    includeantruntime="false" >
+			<classpath refid="build.classpath" />
+		</javac>
+
+	</target>
+
+	<!-- Creates Javadoc -->
+	<target name="docs" depends="compile">
+		<javadoc packagenames="src" sourcepath="${src.dir}" destdir="${docs.dir}">
+			<!-- Define which files / directory should get included, we include all -->
+			<fileset dir="${src.dir}">
+				<include name="**" />
+			</fileset>
+		</javadoc>
+	</target>
+
+	<!--Creates the deployable jar file -->
+	<target name="jar" depends="compile">
+		<jar destfile="${dist.dir}\genjava_03.jar" basedir="${build.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="test.MyMain" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- Run the JUnit Tests -->
+	<!-- Output is XML, could also be plain -->
+	<target name="junit" depends="compile">
+		<junit printsummary="on" fork="true" haltonfailure="yes">
+			<classpath refid="build.classpath" />
+			<formatter type="xml" />
+			<batchtest todir="${test.report.dir}">
+				<fileset dir="${src.dir}">
+					<include name="**/*Test*.java" />
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<!-- main excluding docs  -->
+	<target name="main" depends="compile, jar, junit">
+		<description>Main target</description>
+	</target>
+
+	<pathconvert pathsep="${line.separator}" property="echo.classpath"
+		refid="build.classpath">
+	</pathconvert>
+
+	<!-- Write the result to the console -->
+	<echo message="The following classpath is associated with build.classpath " />
+	<echo message="${echo.classpath}" />
+
+</project>
